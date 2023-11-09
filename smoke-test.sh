@@ -68,6 +68,9 @@ era_test_node = { path = \"../${TEST_REPO_DIR}\" }
   ;;
 esac
 
+echo "Building...."
+RUST_LOG=debug "./foundry-zksync/target/debug/zkforge" zkbuild &>run.log || fail "zkforge build failed"
+
 # Sometimes the binary takes time to be created/renamed
 # Run tests and do not exit on failure
 sleep 2 && echo -e "\nRunning tests..."

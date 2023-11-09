@@ -1,6 +1,6 @@
-name: test
+name: smoke-test
 
-on: 
+on:
   pull_request:
   push:
     branches:
@@ -16,39 +16,51 @@ jobs:
       TEST_REPO_DIR: test-repo
     strategy:
       fail-fast: true
+      matrix:
+        include:
+          - rust_version: nightly-2023-07-23
+            solc_version: v0.8.20
 
     name: smoke test
-    runs-on: ubuntu-22.04-github-hosted-16core
+    runs-on: buildjet-8vcpu-ubuntu-2204
     timeout-minutes: 60
     steps:
-      - uses: hmarr/debug-action@v2
-      - uses: actions/checkout@v4 
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           path: ${{ env.TEST_REPO_DIR }}
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@nightly
+
+      - name: Set up Rust Toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2023-07-23
-      - uses: Swatinem/rust-cache@v2
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
         with:
-            cache-on-failure: true
-      - name: get solc
-        run: |
-          wget https://github.com/ethereum/solidity/releases/download/v0.8.20/solc-static-linux
-          chmod +x solc-static-linux
-          sudo mv solc-static-linux /usr/bin/solc
-        # uses: pontem-network/get-solc@master
-        # with:
-        #   version: v0.8.20
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run smoke test
+        run: ./smoke-test.sh
         env:
           TEST_REPO: ${{ github.event.repository.name }}
-        run: |
-          cd "${TEST_REPO_DIR}"
-          solc --version
-          ls -l
-          ls -l lib
-          export RUST_BACKTRACE=full
-          ./smoke-test.sh
+          RUST_BACKTRACE: full
+        working-directory: ${{ env.TEST_REPO_DIR }}
 
+      - name: Upload Artifact on Failure
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: failed-logs
+          path: run.log
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Workflow failed! Check artifacts for logs."
