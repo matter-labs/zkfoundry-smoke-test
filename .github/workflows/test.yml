@@ -45,5 +45,6 @@ jobs:
           solc --version
           ls -l
           ls -l lib
+          export RUST_BACKTRACE=full
           ./smoke-test.sh
 
