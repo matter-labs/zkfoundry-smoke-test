@@ -33,10 +33,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
             cache-on-failure: true
-      - name: get solc
-        uses: pontem-network/get-solc@master
-        with:
-          version: v0.8.20
+      # - name: get solc
+      #   uses: pontem-network/get-solc@master
+        # with:
+        #   version: v0.8.20
       - name: Run smoke test
         env:
           TEST_REPO: ${{ github.event.repository.name }}
