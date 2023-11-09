@@ -41,6 +41,8 @@ jobs:
         env:
           TEST_REPO: ${{ github.event.repository.name }}
         run: |
-          cd "${TEST_REPO_DIR}" 
+          cd "${TEST_REPO_DIR}"
+          solc --version
+          ls -l
           ./smoke-test.sh
 
