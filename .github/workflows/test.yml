@@ -44,5 +44,6 @@ jobs:
           cd "${TEST_REPO_DIR}"
           solc --version
           ls -l
+          ls -l lib
           ./smoke-test.sh
 
