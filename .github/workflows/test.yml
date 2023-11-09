@@ -37,7 +37,7 @@ jobs:
         run: |
           wget https://github.com/ethereum/solidity/releases/download/v0.8.20/solc-static-linux
           chmod +x solc-static-linux
-          mv solc-static-linux /usr/bin/solc
+          sudo mv solc-static-linux /usr/bin/solc
         # uses: pontem-network/get-solc@master
         # with:
         #   version: v0.8.20
