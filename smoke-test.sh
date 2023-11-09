@@ -2,14 +2,19 @@
 
 set -o pipefail
 
+REPO_URL="https://github.com/matter-labs/foundry-zksync"
+TEST_REPO=$1
+TEST_REPO_DIR=$2
+
 function cleanup() {
+  echo "Cleaning up..."
   rm -rf "./foundry-zksync"
 }
 
 function success() {  
   echo ''
   echo '================================='
-  echo -e "\e[32m> [SUCCESS]\e[0m"
+  printf "\e[32m> [SUCCESS]\e[0m\n"
   echo '================================='
   echo ''
   cleanup
@@ -17,10 +22,11 @@ function success() {
 }
 
 function fail() {
+  echo "Displaying run.log..."
   cat run.log
   echo ''
   echo '=================================='
-  echo -e "\e[31m> [FAILURE]\e[0m ${1}"
+  printf "\e[31m> [FAILURE]\e[0m %s\n" "$1"
   echo '=================================='
   echo ''
   cleanup
@@ -28,22 +34,39 @@ function fail() {
 }
 
 function build_zkforge() {
-  cd "${1}"
-  cargo build 
-  cd ..
+  echo "Building ${1}..."
+  cd "${1}" && cargo build --release && cd ..
 }
+
+function wait_for_build() {
+  local timeout=$1
+  while ! [ -x "./foundry-zksync/target/release/zkforge" ]; do
+    ((timeout--))
+    if [ $timeout -le 0 ]; then
+      echo "Build timed out waiting for binary to be created."
+      exit 1
+    fi
+    sleep 1
+  done
+}
+
+trap cleanup ERR
 
 echo "Repository: ${TEST_REPO}"
 echo "Directory: ${TEST_REPO_DIR}"
 
+# Check for necessary tools
+command -v cargo &>/dev/null || { echo "cargo not found, exiting"; exit 1; }
+command -v git &>/dev/null || { echo "git not found, exiting"; exit 1; }
+
 # Prepare repositories and exit on failure
 set -e
+
 case "${TEST_REPO}" in
 "foundry-zksync")
   build_zkforge "${TEST_REPO_DIR}"
   ;;
-
-"era-revm")
+  "era-revm")
   git clone https://github.com/matter-labs/foundry-zksync
   echo -n "
 [patch.'https://github.com/matter-labs/era-revm']
@@ -66,20 +89,21 @@ era_test_node = { path = \"../${TEST_REPO_DIR}\" }
   git clone https://github.com/matter-labs/foundry-zksync
   build_zkforge "foundry-zksync"
   ;;
+
 esac
 
-echo "Building...."
-RUST_LOG=debug "./foundry-zksync/target/debug/zkforge" zkbuild &>run.log || fail "zkforge build failed"
+wait_for_build 30
 
-# Sometimes the binary takes time to be created/renamed
-# Run tests and do not exit on failure
-sleep 2 && echo -e "\nRunning tests..."
+echo "Building...."
+RUST_LOG=debug "./foundry-zksync/target/release/zkforge" zkbuild &>run.log || fail "zkforge build failed"
+
+echo "Running tests..."
 set +e
 
 # [1] Check test suite passed
-RUST_LOG=debug "./foundry-zksync/target/debug/zkforge" test &>run.log || fail "\`zkforge test\` failed"
+RUST_LOG=debug "./foundry-zksync/target/release/zkforge" test &>run.log || fail "zkforge test failed"
 
 # [2] Check console logs are printed in era-test-node
-grep '\[INT-TEST\] PASS' run.log &>/dev/null || fail "\`zkforge test\` console output failed"
+grep '\[INT-TEST\] PASS' run.log &>/dev/null || fail "zkforge test console output failed"
 
 success
