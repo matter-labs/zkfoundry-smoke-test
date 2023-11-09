@@ -33,8 +33,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
             cache-on-failure: true
-      # - name: get solc
-      #   uses: pontem-network/get-solc@master
+      - name: get solc
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.20/solc-static-linux
+          chmod +x solc-static-linux
+          mv solc-static-linux /usr/bin/solc
+        # uses: pontem-network/get-solc@master
         # with:
         #   version: v0.8.20
       - name: Run smoke test
