@@ -1,0 +1,42 @@
+name: test
+
+on: 
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    env:
+      TEST_REPO_DIR: test-repo
+    strategy:
+      fail-fast: true
+
+    name: smoke test
+    runs-on: ubuntu-22.04-github-hosted-16core
+    timeout-minutes: 60
+    steps:
+      - uses: hmarr/debug-action@v2
+      - uses: actions/checkout@v4 
+        with:
+          path: ${{ env.TEST_REPO_DIR }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2023-07-23
+      - uses: Swatinem/rust-cache@v2
+        with:
+            cache-on-failure: true
+      - name: Run smoke test
+        env:
+          TEST_REPO: ${{ github.event.repository.name }}
+        run: |
+          cd "${TEST_REPO_DIR}" 
+          ./smoke-test.sh
+
