@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
         with:
           path: ${{ env.TEST_REPO_DIR }}
           ref: ${{ github.event.pull_request.head.sha }}
@@ -46,6 +46,12 @@ jobs:
             ~/.cargo/git
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Download Solidity Compiler
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/${{ matrix.solc_version }}/solc-static-linux
+          chmod +x solc-static-linux
+          sudo mv solc-static-linux /usr/bin/solc
 
       - name: Run smoke test
         run: ./smoke-test.sh
