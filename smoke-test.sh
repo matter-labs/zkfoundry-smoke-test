@@ -10,7 +10,7 @@ SOLC="solc-${SOLC_VERSION}"
 BINARY_PATH="./foundry-zksync/target/release/zkforge"
 
 if [ "${TEST_REPO}" == "foundry-zksync" ]; then
-  BINARY_PATH="../${TEST_REPO_DIR}/target/release/zkforge"
+  BINARY_PATH="${TEST_REPO_DIR}/target/release/zkforge"
 fi
 
 function cleanup() {
@@ -51,7 +51,7 @@ function wait_for_build() {
   echo "check ${BINARY_PATH}"
   pwd
   ls -l
-  ls -l "../${TEST_REPO_DIR}"
+  ls -l "${TEST_REPO_DIR}"
   while ! [ -x "${BINARY_PATH}" ]; do
     ((timeout--))
     if [ $timeout -le 0 ]; then
