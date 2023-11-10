@@ -39,7 +39,7 @@ function build_zkforge() {
   echo "Building ${1}..."
   cd "${1}"
   cargo build --release
-  cd ..
+  cd -
 }
 
 function wait_for_build() {
