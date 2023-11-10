@@ -7,6 +7,11 @@ TEST_REPO=${1:-$TEST_REPO}
 TEST_REPO_DIR=${2:-$TEST_REPO_DIR}
 SOLC_VERSION=${SOLC_VERSION:-"v0.8.20"}
 SOLC="solc-${SOLC_VERSION}"
+BINARY_PATH="./foundry-zksync/target/release/zkforge"
+
+if [ "${TEST_REPO}" == "foundry-zksync" ]; then
+  BINARY_PATH="../${TEST_REPO_DIR}/target/release/zkforge"
+fi
 
 function cleanup() {
   echo "Cleaning up..."
@@ -43,7 +48,7 @@ function download_solc() {
 
 function wait_for_build() {
   local timeout=$1
-  while ! [ -x "./foundry-zksync/target/release/zkforge" ]; do
+  while ! [ -x "${BINARY_PATH}" ]; do
     ((timeout--))
     if [ $timeout -le 0 ]; then
       echo "Build timed out waiting for binary to be created."
@@ -66,6 +71,7 @@ trap cleanup ERR
 echo "Repository: ${TEST_REPO}"
 echo "Directory: ${TEST_REPO_DIR}"
 echo "Solc: ${SOLC_VERSION}"
+echo "Zkforge binary: ${BINARY_PATH}"
 
 # Download solc
 download_solc "${SOLC_VERSION}"
@@ -114,11 +120,11 @@ era_test_node = { path = \"../${TEST_REPO_DIR}\" }
 esac
 
 echo "Building...."
-RUST_LOG=debug "./foundry-zksync/target/release/zkforge" zkbuild --use "./${SOLC}" &>run.log || fail "zkforge build failed"
+RUST_LOG=debug "${BINARY_PATH}" zkbuild --use "./${SOLC}" &>run.log || fail "zkforge build failed"
 
 echo "Running tests..."
 # [1] Check test suite passed
-RUST_LOG=debug "./foundry-zksync/target/release/zkforge" test --use "./${SOLC}" &>run.log || fail "zkforge test failed"
+RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" &>run.log || fail "zkforge test failed"
 # [2] Check console logs are printed in era-test-node
 grep '\[INT-TEST\] PASS' run.log &>/dev/null || fail "zkforge test console output failed"
 
