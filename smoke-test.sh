@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -o pipefail
+# Fail fast and on piped commands
+set -o pipefail -e
 
-REPO_URL="https://github.com/matter-labs/foundry-zksync"
 TEST_REPO=$1
 TEST_REPO_DIR=$2
 
@@ -33,9 +33,13 @@ function fail() {
   exit 1
 }
 
+# We want this to fail-fast and hence are put on separate lines
+# See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
   echo "Building ${1}..."
-  cd "${1}" && cargo build --release && cd ..
+  cd "${1}"
+  cargo build --release
+  cd .
 }
 
 function wait_for_build() {
@@ -60,8 +64,6 @@ command -v cargo &>/dev/null || { echo "cargo not found, exiting"; exit 1; }
 command -v git &>/dev/null || { echo "git not found, exiting"; exit 1; }
 
 # Prepare repositories and exit on failure
-set -e
-
 case "${TEST_REPO}" in
 "foundry-zksync")
   build_zkforge "${TEST_REPO_DIR}"
