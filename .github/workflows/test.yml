@@ -1,0 +1,67 @@
+name: smoke-test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    env:
+      TEST_REPO_DIR: test-repo
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - rust_version: nightly-2023-07-23
+            solc_version: v0.8.20
+
+    name: smoke test
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 
+        with:
+          path: ${{ env.TEST_REPO_DIR }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
+
+      - name: Set up Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run smoke test
+        run: ./smoke-test.sh
+        env:
+          TEST_REPO: ${{ github.event.repository.name }}
+          SOLC_VERSION: ${{ matrix.solc_version }}
+          RUST_BACKTRACE: full
+        working-directory: ${{ env.TEST_REPO_DIR }}
+
+      - name: Upload Artifact on Failure
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: failed-logs
+          path: run.log
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Workflow failed! Check artifacts for logs."
