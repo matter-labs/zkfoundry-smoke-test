@@ -37,7 +37,7 @@ function fail() {
 }
 
 function download_solc() {
-  wget -O "${SOLC}" "https://github.com/ethereum/solidity/releases/download/${1}/solc-static-linux"
+  wget --quiet -O "${SOLC}" "https://github.com/ethereum/solidity/releases/download/${1}/solc-static-linux"
   chmod +x "${SOLC}"
 }
 
