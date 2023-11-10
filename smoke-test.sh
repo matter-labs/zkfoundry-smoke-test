@@ -48,10 +48,6 @@ function download_solc() {
 
 function wait_for_build() {
   local timeout=$1
-  echo "check ${BINARY_PATH}"
-  pwd
-  ls -l
-  ls -l "${TEST_REPO_DIR}"
   while ! [ -x "${BINARY_PATH}" ]; do
     ((timeout--))
     if [ $timeout -le 0 ]; then
