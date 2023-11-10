@@ -3,8 +3,8 @@
 # Fail fast and on piped commands
 set -o pipefail -e
 
-TEST_REPO=${1:-TEST_REPO}
-TEST_REPO_DIR=${2:-TEST_REPO_DIR}
+TEST_REPO=${1:-$TEST_REPO}
+TEST_REPO_DIR=${2:-$TEST_REPO_DIR}
 SOLC_VERSION=${SOLC_VERSION:-"v0.8.20"}
 SOLC="solc-${SOLC_VERSION}"
 
