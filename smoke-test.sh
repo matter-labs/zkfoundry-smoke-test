@@ -58,18 +58,18 @@ function wait_for_build() {
   done
 }
 
+# Remove Cargo.lock to allow it to auto resolve any dependency updates
+function rm_cargo_lock() {
+  echo "Removing ${1}/Cargo.lock"
+  if [ -f "${1}/Cargo.lock" ]; then
+    rm "${1}/Cargo.lock"
+  fi
+}
+
 # We want this to fail-fast and hence are put on separate lines
 # See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
   echo "Building ${1}..."
-
-  # Remove Cargo.lock to allow it to auto resolve any dependency updates
-  ls -l ${1}
-  if [ -f "${1}/Cargo.lock" ]; then
-    rm "${1}/Cargo.lock"
-  fi
-  ls -l ${1}
-
   cargo build --release --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
 }
@@ -107,6 +107,7 @@ case "${TEST_REPO}" in
 [patch.'https://github.com/matter-labs/era-revm']
 era_revm = { path = \"../${TEST_REPO_DIR}\" }
 " >>"foundry-zksync/Cargo.toml"
+  rm_cargo_lock "foundry-zksync"
   build_zkforge "foundry-zksync"
   ;;
 
@@ -116,6 +117,7 @@ era_revm = { path = \"../${TEST_REPO_DIR}\" }
 [patch.'https://github.com/matter-labs/era-test-node']
 era_test_node = { path = \"../${TEST_REPO_DIR}\" }
 " >>"foundry-zksync/Cargo.toml"
+  rm_cargo_lock "foundry-zksync"
   build_zkforge "foundry-zksync"
   ;;
 
