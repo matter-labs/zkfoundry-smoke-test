@@ -107,7 +107,6 @@ case "${TEST_REPO}" in
 [patch.'https://github.com/matter-labs/era-revm']
 era_revm = { path = \"../${TEST_REPO_DIR}\" }
 " >>"foundry-zksync/Cargo.toml"
-  cd "foundry-zksync" && cargo build && cd ..
   build_zkforge "foundry-zksync"
   ;;
 
