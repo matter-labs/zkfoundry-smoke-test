@@ -64,9 +64,11 @@ function build_zkforge() {
   echo "Building ${1}..."
 
   # Remove Cargo.lock to allow it to auto resolve any dependency updates
+  ls -l ${1}
   if [ -f "${1}/Cargo.lock" ]; then
     rm "${1}/Cargo.lock"
   fi
+  ls -l ${1}
 
   cargo build --release --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
