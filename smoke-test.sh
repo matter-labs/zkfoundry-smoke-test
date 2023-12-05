@@ -62,6 +62,12 @@ function wait_for_build() {
 # See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
   echo "Building ${1}..."
+
+  # Remove Cargo.lock to allow it to auto resolve any dependency updates
+  if [ -f "${1}/Cargo.lock" ]; then
+    rm "${1}/Cargo.lock"
+  fi
+
   cargo build --release --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
 }
