@@ -36,4 +36,9 @@ contract CounterTest is Test {
         counter.increment();
         assertEq(counter.number(), 200);
     }
+
+    function testFail_Increment() public {
+        counter.increment();
+        assertEq(counter.number(), 200);
+    }
 }
