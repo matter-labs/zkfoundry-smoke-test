@@ -133,20 +133,19 @@ RUST_LOG=debug "${BINARY_PATH}" zkbuild --use "./${SOLC}" &>run.log || fail "zkf
 
 echo "Running tests..."
 
-# [1] Check test suite passed
+echo "[1] Check test suite passed"
 RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'test_Increment' &>run.log || fail "zkforge test failed"
 
-# [2] Check console logs are printed in era-test-node
+echo "[2] Check console logs are printed in era-test-node"
 grep '\[INT-TEST\] PASS' run.log &>/dev/null || fail "zkforge test console output failed"
 
-# [3] Check asserts fail tests
+echo "[3] Check asserts fail tests"
 set +e
-RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'test_FailIncrement' &> run.log
-FAILURE=$?
-set -e
-[ $FAILURE -ne 0 ] || fail "zkforge test did not fail"
+if RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'test_FailIncrement' &> run.log; then
+  fail "zkforge test did not fail"
+fi
 
-# [4] Check testFail works
+echo "[4] Check testFail works"
 RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'testFail_Increment' &> run.log || fail "zkforge testFail failed"
 
 success
