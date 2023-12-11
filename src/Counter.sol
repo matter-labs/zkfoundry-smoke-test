@@ -31,4 +31,14 @@ contract CounterTest is Test {
             console.log("[INT-TEST] FAIL");
         }
     }
+
+    function test_FailIncrement() public {
+        counter.increment();
+        assertEq(counter.number(), 200);
+    }
+
+    function testFail_Increment() public {
+        counter.increment();
+        assertEq(counter.number(), 200);
+    }
 }
