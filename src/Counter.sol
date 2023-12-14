@@ -14,6 +14,11 @@ contract Counter {
         console.log("increment");
         number += 1;
     }
+
+    function incrementBy(uint64 amount) public {
+        console.log("incrementBy");
+        number += uint256(amount);
+    }
 }
 
 contract CounterTest is Test {
@@ -40,5 +45,12 @@ contract CounterTest is Test {
     function testFail_Increment() public {
         counter.increment();
         assertEq(counter.number(), 200);
+    }
+
+    function testFuzz_Increment(uint64 amount) public {
+        uint256 numBefore = counter.number();
+        counter.incrementBy(amount);
+        uint256 numAfter = counter.number();
+        assertEq(numBefore + amount + 1, numAfter);
     }
 }
