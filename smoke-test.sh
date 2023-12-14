@@ -69,7 +69,7 @@ function rm_cargo_lock() {
 # We want this to fail-fast and hence are put on separate lines
 # See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
-  echo "Building ${1}..."
+  echo "Building ${1} ($(git -C "${1}" rev-parse HEAD))"
   cargo build --release --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
 }
@@ -128,9 +128,6 @@ era_test_node = { path = \"../${TEST_REPO_DIR}\" }
 
 esac
 
-echo "Building...."
-RUST_LOG=debug "${BINARY_PATH}" zkbuild --use "./${SOLC}" &>run.log || fail "zkforge build failed"
-
 echo "Running tests..."
 
 echo "[1] Check test suite passed"
@@ -141,11 +138,14 @@ grep '\[INT-TEST\] PASS' run.log &>/dev/null || fail "zkforge test console outpu
 
 echo "[3] Check asserts fail tests"
 set +e
-if RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'test_FailIncrement' &> run.log; then
+if RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'test_FailIncrement' &>run.log; then
   fail "zkforge test did not fail"
 fi
 
 echo "[4] Check testFail works"
-RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'testFail_Increment' &> run.log || fail "zkforge testFail failed"
+RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'testFail_Increment' &>run.log || fail "zkforge testFail failed"
+
+echo "[5] Check fuzz test works"
+RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}" --match-test 'testFuzz_Increment' &>run.log || fail "zkforge fuzz test failed"
 
 success
